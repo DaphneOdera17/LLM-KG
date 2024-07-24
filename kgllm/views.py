@@ -17,7 +17,6 @@ def login(request):
     if request.method == "GET":
         return render(request, "login.html")
     else:
-        # print(request.POST)
         username = request.POST.get("user")
         password = request.POST.get("pwd")
 
@@ -45,3 +44,12 @@ def register(request):
     else:
         UserInfo.objects.create(name=user, password=pwd, email=email)
         return redirect("/index/")
+
+def home(request):
+    return render(request, 'index.html')
+
+def kgqa(request):
+    return render(request, "kgqa.html")
+
+def contact(request):
+    return render(request, "contact.html")

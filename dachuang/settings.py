@@ -116,3 +116,12 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# 设置会话过期时间
+SESSION_COOKIE_AGE = 1209600  # 14 天
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 浏览器关闭后不会清除会话
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]

@@ -5,33 +5,19 @@
     <title>KG-LLM</title>
     <link rel="stylesheet" href="../static/css/body.css">
     <style>
-        nav {
-            background-color: #333;
-            overflow: hidden;
-        }
-
-        nav a {
-            float: left;
-            display: block;
-            color: white;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-        }
-
-        nav a:hover {
-            background-color: #ddd;
-            color: black;
+        .content {
+            padding-top: 60px;
+            margin-left: 30px;
         }
     </style>
 </head>
 <body>
-    <nav>
-        <a href="{% url 'index' %}">首页</a>
-        <a href="{% url 'kgqa' %}">知识问答</a>
-        <a href="{% url 'contact' %}">联系我们</a>
-    </nav>
+    {% include 'nav.html' with nav_class='fixed' %}
 
-    <h1 style="color: white; margin-left: 30px">Welcome</h1>
+     <div class="content">
+        <h1 style="color: white">
+            Welcome{% if user %}, {{ user.name }}{% endif %}
+        </h1>
+    </div>
 </body>
 </html>

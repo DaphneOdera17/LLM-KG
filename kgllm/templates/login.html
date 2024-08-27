@@ -32,18 +32,15 @@
             text-align: center;
         }
 
-        .error {
-            color: red;
-            font-size: 22px;
-            margin-top: 5px;
+        .alert {
+            display: none;
         }
-
     </style>
 </head>
 <body>
     <div class="account">
         <h1>用户登录</h1>
-        <form method="POST" action="/login/">
+        <form method="POST" id="loginForm" action="/login/">
           {% csrf_token %}
           <div class="form-group">
             <label for="user">用户名</label>
@@ -56,17 +53,63 @@
           <button type="submit" class="btn btn-primary btn-block btn-lg">登录</button>
             <a href="/register/" class="btn btn-info btn-block btn-lg" style="margin-top: 15px">注册</a>
         </form>
+{#        {% if error_msg %}#}
+{#          <div id="error-msg" class="alert alert-danger" role="alert">#}
+{#            {{ error_msg }}#}
+{#          </div>#}
+{#        {% endif %}#}
+        <div id="message" class="alert alert-success" role="alert"></div>
+        <div id="error-msg" class="alert alert-danger" role="alert"></div>
     </div>
 
 </body>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let error = document.querySelector('.error');
+{#<script>#}
+{#    document.addEventListener("DOMContentLoaded", function() {#}
+{#        let errorMsg = document.getElementById('error-msg');#}
+{##}
+{#        setTimeout(function() {#}
+{#            if (errorMsg) {#}
+{#                errorMsg.style.display = 'none';#}
+{#            }#}
+{#        }, 2000);#}
+{#    });#}
+{#</script>#}
 
-        setTimeout(function() {
-            error.style.display = 'none';
-        }, 3000);
-    });
-</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#loginForm').on('submit', function(event) {
+                event.preventDefault(); // Prevent the form from submitting normally
+                $.ajax({
+                    type: 'POST',
+                    url: $(this).attr('action'),
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        }
+                        if (response.message) {
+                            $('#message').text(response.message).show();
+                            setTimeout(function() {
+                                $('#message').fadeOut();
+                            }, 2000);
+                        }
+                        if (response.error) {
+                            $('#error-msg').text(response.error).show();
+                            setTimeout(function() {
+                                $('#error-msg').fadeOut();
+                            }, 2000);
+                        }
+                    },
+                    error: function() {
+                        $('#error-msg').text('发生错误，请重试。').show();
+                        setTimeout(function() {
+                            $('#error-msg').fadeOut();
+                        }, 2000);
+                    }
+                });
+            });
+        });
+    </script>
 </html>

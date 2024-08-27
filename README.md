@@ -10,7 +10,7 @@ py manage.py runserver 8000
 
 
 
-## Docker 运行
+## Docker 运行 （依赖未完整， 完善系统再测试）
 
 在项目根目录
 

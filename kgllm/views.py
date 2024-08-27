@@ -1,9 +1,11 @@
+from django.contrib.auth.hashers import check_password
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout as auth_logout
 from kgllm.models import UserInfo
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.hashers import make_password
 
 def index(request):
     if 'user_id' in request.session:
@@ -11,7 +13,6 @@ def index(request):
             user = UserInfo.objects.get(id=request.session['user_id'])
         except UserInfo.DoesNotExist:
             user = None
-        print(user.name)
         return render(request, "index.html", {"user": user})
     else:
         return redirect("/login/")
@@ -54,12 +55,12 @@ def login_view(request):
         password = request.POST.get("pwd")
 
         try:
-            obj = UserInfo.objects.get(name=username)
+            user = UserInfo.objects.get(name=username)
         except UserInfo.DoesNotExist:
-            obj = None
+            user = None
 
-        if obj is not None and obj.password == password:
-            request.session['user_id'] = obj.id
+        if user and check_password(password, user.password):
+            request.session['user_id'] = user.id
             return JsonResponse({'redirect': '/index/', 'message': '登录成功!'})
         else:
             return JsonResponse({'error': '用户名或密码错误'})
@@ -78,7 +79,9 @@ def register(request):
     if UserInfo.objects.filter(name=user).exists():
         return JsonResponse({'error': '用户名已存在！'})
 
-    UserInfo.objects.create(name=user, password=pwd, email=email)
+    encrypted_password = make_password(pwd)
+
+    UserInfo.objects.create(name=user, password=encrypted_password, email=email)
     return JsonResponse({'redirect': '/login/', 'message': '注册成功！'})
 
 def home(request):

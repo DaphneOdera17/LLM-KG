@@ -6,6 +6,8 @@ from kgllm.models import UserInfo
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import render
+from .neo4j_utils import get_people_from_neo4j
 
 def index(request):
     if 'user_id' in request.session:
@@ -90,4 +92,6 @@ def home(request):
 def kgqa(request):
     return render(request, "kgqa.html")
 
-
+def kg_view(request):
+    graph_data = get_people_from_neo4j()
+    return render(request, "kg.html", {"graph_data": graph_data})

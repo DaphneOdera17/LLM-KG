@@ -63,8 +63,9 @@ WSGI_APPLICATION = "dachuang.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# MySQL 配置
+
 DATABASES = {
+    # MySQL 配置
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "kgllm",
@@ -72,7 +73,7 @@ DATABASES = {
         "PASSWORD": "root",
         "HOST": '127.0.0.1',
         "PORT": 3306,
-    }
+    },
 }
 
 

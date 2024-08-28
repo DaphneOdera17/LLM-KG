@@ -90,8 +90,15 @@ def home(request):
     return render(request, 'index.html')
 
 def kgqa(request):
-    return render(request, "kgqa.html")
+    if 'user_id' in request.session:
+        return render(request, "kgqa.html")
+    else:
+        return redirect("/login/")
+
 
 def kg_view(request):
-    graph_data = get_people_from_neo4j()
-    return render(request, "kg.html", {"graph_data": graph_data})
+    if 'user_id' in request.session:
+        graph_data = get_people_from_neo4j()
+        return render(request, "kg.html", {"graph_data": graph_data})
+    else:
+        return redirect("/login/")

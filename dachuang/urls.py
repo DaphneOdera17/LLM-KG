@@ -7,11 +7,10 @@ from kgllm import views
 urlpatterns = [
     path('', LoginView.as_view(template_name='login.html'), name='login'),
     path('index/', views.index, name='index'),
-    path('user/list/', views.user_list),
     path('user/add/', views.user_add),
     path('login/', views.login_view, name='login'),
     path('register/', views.register),
-    path('kgqa/', views.kgqa, name='kgqa'),
+    path('kgqa/', views.chat_view, name='kgqa'),
     path('logout/', views.logout_view, name='logout'),
     path('kg/', views.kg_view, name='kg'),
 ]

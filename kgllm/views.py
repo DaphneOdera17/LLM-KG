@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import render
 from .neo4j_utils import get_people_from_neo4j
+from django.views.decorators.csrf import csrf_exempt
 
 def index(request):
     if 'user_id' in request.session:
@@ -23,10 +24,6 @@ def index(request):
 def logout_view(request):
     request.session.flush()
     return redirect('/login/')
-
-
-def user_list(request):
-    return render(request, "user_list.html")
 
 def user_add(request):
     return HttpResponse("添加用户")
@@ -102,3 +99,11 @@ def kg_view(request):
         return render(request, "kg.html", {"graph_data": graph_data})
     else:
         return redirect("/login/")
+
+@csrf_exempt
+def chat_view(request):
+    if request.method == 'POST':
+        question = request.POST.get('question')
+        answer = "未完善: " + question
+        return JsonResponse({'answer': answer})
+    return render(request, 'kgqa.html')

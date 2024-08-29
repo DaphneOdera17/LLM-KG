@@ -1,7 +1,7 @@
 from py2neo import Graph
 
 def get_people_from_neo4j():
-    graph = Graph("bolt://localhost:7687", auth=("neo4j", "06794qwe"))
+    graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
     nodes = graph.run("MATCH (n:Person) RETURN n.name AS id, n.name AS name, n.age AS age").data()
     edges = graph.run(

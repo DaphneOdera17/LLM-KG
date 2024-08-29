@@ -13,20 +13,21 @@
 </nav>
 
 <style>
-    nav {
-        display: flex;
-        justify-content: space-between;
-        background-color: #333;
-        overflow: hidden;
-        width: 100%;
-        z-index: 1000;
-        padding: 0 10px;
-
+    :root {
+        --nav-height: 60px;
     }
 
-    nav.fixed {
+    nav {
+        height: var(--nav-height);
+        background-color: #333;
+        color: white;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         position: fixed;
         top: 0;
+        width: 100%;
+        z-index: 1000;
     }
 
     .nav-left a,
@@ -45,9 +46,14 @@
         color: black;
     }
 
+    .nav-left {
+        display: flex;
+    }
+
     .nav-right {
         display: flex;
         align-items: center;
+        margin-left: auto;
     }
 
     body {

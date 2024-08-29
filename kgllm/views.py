@@ -102,8 +102,11 @@ def kg_view(request):
 
 @csrf_exempt
 def chat_view(request):
-    if request.method == 'POST':
-        question = request.POST.get('question')
-        answer = "未完善: " + question
-        return JsonResponse({'answer': answer})
-    return render(request, 'kgqa.html')
+    if 'user_id' in request.session:
+        if request.method == 'POST':
+            question = request.POST.get('question')
+            answer = "回答"
+            return JsonResponse({'answer': answer})
+        return render(request, 'kgqa.html')
+    else:
+        return redirect("/login/")

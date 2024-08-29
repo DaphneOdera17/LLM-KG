@@ -1,27 +1,9 @@
-:root {
-    --nav-height: 60px; /* Adjust based on the height of your nav */
-}
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     height: 100vh;
     display: flex;
     flex-direction: column;
-}
-
-nav {
-    height: var(--nav-height);
-    background-color: #333;
-    color: white;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
 }
 
 .content {
@@ -38,9 +20,8 @@ nav {
     display: flex;
     flex-direction: column;
     flex: 1;
-    margin: 10px;
     background-color: #f9f9f9;
-    border-radius: 5px;
+    border-radius: 15px;
     overflow: hidden;
 }
 
@@ -50,6 +31,8 @@ nav {
     overflow-y: auto;
     background-color: #fff;
     border-bottom: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
 }
 
 .input-box {
@@ -75,13 +58,41 @@ nav {
 }
 
 .message {
-    margin: 10px 0;
-}
+            max-width: 60%;
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            position: relative;
+        }
 
-.user-message {
-    text-align: right;
-}
+        .user-message {
+            background-color: #d1e7dd;
+            align-self: flex-end;
+            text-align: right;
+        }
 
-.bot-message {
-    text-align: left;
-}
+        .bot-message {
+            background-color: #e9ecef;
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .message::after {
+            content: "";
+            position: absolute;
+            border-style: solid;
+        }
+
+        .user-message::after {
+            border-width: 10px 10px 0 10px;
+            border-color: #d1e7dd transparent transparent transparent;
+            bottom: -10px;
+            right: 10px;
+        }
+
+        .bot-message::after {
+            border-width: 10px 10px 0 10px;
+            border-color: #e9ecef transparent transparent transparent;
+            bottom: -10px;
+            left: 10px;
+        }

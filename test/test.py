@@ -33,7 +33,7 @@ prompt = ChatPromptTemplate.from_messages([("system", "你是一个有关{specie
 # 裁剪器
 from langchain_core.messages import trim_messages
 
-trimmer = trim_messages(max_tokens=1000000,
+trimmer = trim_messages(max_tokens=100000,
                         strategy="last",
                         token_counter=model,
                         include_system=True,

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册</title>
+    <link rel="stylesheet" href="/static/plugins/bootstrap-3.4.1/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/body.css">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .account {
+            border: 1px solid #dddddd;
+            width: 500px;
+            height: auto;
+            box-shadow: 5px 5px 20px #aaa;
+            padding: 20px 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8%;
+        }
+
+        .account h1 {
+            text-align: center;
+        }
+
+        .alert {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="account">
+        <h1>用户注册</h1>
+        <form method="POST" id="registerForm" action="/register/">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" name="username" class="form-control" id="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" class="form-control" name="password" id="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" class="form-control" name="email" id="email" placeholder="请输入邮箱" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">注册</button>
+            <a href="/login" class="btn btn-info btn-block btn-lg" style="margin-top: 15px">返回登录界面</a>
+
+            <div id="message" class="alert alert-success" role="alert"></div>
+            <div id="error-msg" class="alert alert-danger" role="alert"></div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+    $('#registerForm').on('submit', function(event) {
+        event.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.redirect) {
+                        window.location.href = response.redirect;
+                    }
+                    if (response.message) {
+                        $('#message').text(response.message).show();
+                        setTimeout(function() {
+                            $('#message').fadeOut();
+                        }, 2000);
+                    }
+            },
+            error: function(xhr) {
+                const errorResponse = xhr.responseJSON;
+                if (errorResponse.error) {
+                    $('#error-msg').text(errorResponse.error).show();
+                    setTimeout(function() {
+                        $('#error-msg').fadeOut();
+                    }, 1500);
+                }
+            }
+        });
+    });
+});
+    </script>
+
+</body>
+</html>

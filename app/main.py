@@ -22,13 +22,7 @@ def get_db():
     finally:
         db.close()
 
-@app.middleware("http")
-async def check_authentication(request: Request, call_next):
-    user = request.cookies.get("user")
-    if request.url.path != "/login" and not user:
-        return RedirectResponse(url="/login")
-    response = await call_next(request)
-    return response
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):

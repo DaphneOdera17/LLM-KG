@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, Response, HTTPException, Form, Cookie
+from fastapi import FastAPI, Depends, Request, Response, Form, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 import bcrypt
@@ -34,7 +34,7 @@ async def check_authentication(request: Request, call_next):
 async def root(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
     user_info = None
     if user:
-        user_info = load_user(user, db)  # 从数据库加载用户信息
+        user_info = load_user(user, db)
 
     return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home", "user": user_info})
 
@@ -98,12 +98,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 @app.get("/kg", response_class=HTMLResponse)
 async def kg_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
-    user_info = load_user(user, db) if user else None  # 从数据库加载用户信息
+    user_info = load_user(user, db) if user else None
     return templates.TemplateResponse("kg.html", {"request": request, "nav_class": "kg", "user": user_info})
 
 @app.get("/kgqa", response_class=HTMLResponse)
 async def kgqa_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
-    user_info = load_user(user, db) if user else None  # 从数据库加载用户信息
+    user_info = load_user(user, db) if user else None
     return templates.TemplateResponse("kgqa.html", {"request": request, "nav_class": "kgqa", "user": user_info})
 
 

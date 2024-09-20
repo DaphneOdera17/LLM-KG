@@ -5,7 +5,13 @@
         <a href="/kgqa" class="{{ 'active' if nav_class == 'kgqa' else '' }}">知识问答</a>
     </div>
     <div class="nav-right">
-
+        {% if user %}
+            <form action="/logout" method="post" style="display: inline;">
+                <button type="submit" style="background: none; border: none; color: white; cursor: pointer;">
+                    登出
+                </button>
+            </form>
+        {% endif %}
     </div>
 </nav>
 
@@ -28,17 +34,18 @@
     }
 
     .nav-left a,
-    .nav-right a {
+    .nav-right button {
         float: left;
         display: block;
         color: white;
         text-align: center;
         padding: 14px 20px;
         text-decoration: none;
+        font-size: 16px;  /* 设置字体大小 */
     }
 
     .nav-left a:hover,
-    .nav-right a:hover {
+    .nav-right button:hover {
         background-color: #ddd;
         color: black;
     }
@@ -53,11 +60,10 @@
         margin-left: auto;
     }
 
-    .nav-left a.active{
+    .nav-left a.active {
         background-color: #ddd;
         color: black;
     }
-
 
     body {
         margin: 0;

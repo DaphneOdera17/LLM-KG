@@ -1,15 +1,14 @@
-import threading
-
-from fastapi import FastAPI, Depends, Request, Response, HTTPException, Form
-from sqlalchemy.orm import Session
+from fastapi import FastAPI, Depends, Request, Response, HTTPException, Form, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 import bcrypt
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from .db import SessionLocal, engine, Base
-from . import models
 import gradio as gr
+from . import models
+from .db import SessionLocal, engine, Base
+import threading
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -23,10 +22,23 @@ def get_db():
     finally:
         db.close()
 
+@app.middleware("http")
+async def check_authentication(request: Request, call_next):
+    user = request.cookies.get("user")
+    if request.url.path != "/login" and not user:
+        return RedirectResponse(url="/login")
+    response = await call_next(request)
+    return response
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request, db: Session = Depends(get_db)):
-    return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home"})
+async def root(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
+    user_info = None
+    if user:
+        user_info = load_user(user, db)  # 从数据库加载用户信息
+
+    return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home", "user": user_info})
+
+
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -40,19 +52,21 @@ async def login(
     db: Session = Depends(get_db)
 ):
     user = load_user(username, db)
-    if user is None:
+    if user is None or not verify_password(password, user.password):
         return JSONResponse(status_code=400, content={'error': '用户名或密码错误！'})
 
-    if not verify_password(password, user.password):
-        return JSONResponse(status_code=400, content={'error': '用户名或密码错误！'})
+    response = JSONResponse(content={'redirect': '/', 'message': '登录成功！'})
+    response.set_cookie(key="user", value=username, httponly=True)  # 设置 cookie
+    return response
 
-    return JSONResponse(content={'redirect': '/', 'message': '登录成功！'})
-
+@app.post('/logout')
+async def logout(response: Response):
+    response.delete_cookie(key="user")  # 清除 cookie
+    return RedirectResponse(url='/login', status_code=303)
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
-
 
 @app.post('/register')
 async def register(
@@ -70,13 +84,11 @@ async def register(
         return JSONResponse(status_code=400, content={'error': '用户名已存在！'})
 
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
     new_user = models.User(username=username, password=hashed_password.decode('utf-8'), email=email)
     db.add(new_user)
     db.commit()
 
     return JSONResponse(content={'redirect': '/login/', 'message': '注册成功！'})
-
 
 def load_user(username: str, db: Session):
     return db.query(models.User).filter(models.User.username == username).first()
@@ -85,8 +97,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 @app.get("/kg", response_class=HTMLResponse)
-async def kg_page(request: Request):
-    return templates.TemplateResponse("kg.html", {"request": request, "nav_class": "kg"})
+async def kg_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
+    user_info = load_user(user, db) if user else None  # 从数据库加载用户信息
+    return templates.TemplateResponse("kg.html", {"request": request, "nav_class": "kg", "user": user_info})
+
+@app.get("/kgqa", response_class=HTMLResponse)
+async def kgqa_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
+    user_info = load_user(user, db) if user else None  # 从数据库加载用户信息
+    return templates.TemplateResponse("kgqa.html", {"request": request, "nav_class": "kgqa", "user": user_info})
+
+
+
 
 
 def qa_function(question):
@@ -103,17 +124,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/kgqa", response_class=HTMLResponse)
-async def kgqa_page(request: Request):
-    return templates.TemplateResponse("kgqa.html", {"request": request, "nav_class": "kgqa"})
+
 
 def start_gradio():
     gr_interface.launch(server_name="127.0.0.1", server_port=7860, share=True, inbrowser=False)
-
 
 @app.on_event("startup")
 async def startup_event():
     thread = threading.Thread(target=start_gradio)
     thread.start()
-
-

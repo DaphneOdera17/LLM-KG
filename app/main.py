@@ -22,14 +22,15 @@ def get_db():
     finally:
         db.close()
 
-
+def load_user(username: str, db: Session):
+    return db.query(models.User).filter(models.User.username == username).first()
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
-    user_info = None
-    if user:
-        user_info = load_user(user, db)
+    if not user:
+        return RedirectResponse(url="/login")
 
+    user_info = load_user(user, db)
     return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home", "user": user_info})
 
 
@@ -50,13 +51,16 @@ async def login(
         return JSONResponse(status_code=400, content={'error': '用户名或密码错误！'})
 
     response = JSONResponse(content={'redirect': '/', 'message': '登录成功！'})
-    response.set_cookie(key="user", value=username, httponly=True)  # 设置 cookie
+    response.delete_cookie(key="user")
+
     return response
 
 @app.post('/logout')
 async def logout(response: Response):
-    response.delete_cookie(key="user")  # 清除 cookie
+    response.delete_cookie(key="user")
+
     return RedirectResponse(url='/login', status_code=303)
+
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):

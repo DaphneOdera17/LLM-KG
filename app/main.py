@@ -51,9 +51,10 @@ async def login(
         return JSONResponse(status_code=400, content={'error': '用户名或密码错误！'})
 
     response = JSONResponse(content={'redirect': '/', 'message': '登录成功！'})
-    response.delete_cookie(key="user")
+    response.set_cookie(key="user", value=user.username)
 
     return response
+
 
 @app.post('/logout')
 async def logout(response: Response):

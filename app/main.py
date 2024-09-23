@@ -11,11 +11,14 @@ from starlette.templating import Jinja2Templates
 import gradio as gr
 from app import models
 from app.db import SessionLocal, engine, Base
+from auth import router as auth_router
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+app.include_router(auth_router)
 
 def get_db():
     db = SessionLocal()
@@ -38,71 +41,6 @@ async def root(request: Request, db: Session = Depends(get_db), user: str = Cook
     return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home", "user": user_info})
 
 
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-
-@app.post("/auth/token")
-async def login(
-        request: Request,
-        username: str = Form(...),
-        password: str = Form(...),
-        db: Session = Depends(get_db)
-):
-    user = load_user(username, db)
-    if user is None or not verify_password(password, user.password):
-        return JSONResponse(status_code=400, content={'error': '用户名或密码错误！'})
-
-    response = JSONResponse(content={'redirect': '/', 'message': '登录成功！'})
-    response.set_cookie(key="user", value=user.username)
-
-    return response
-
-
-@app.post('/logout')
-async def logout(response: Response):
-    response.delete_cookie(key="user", path="/")
-
-    return RedirectResponse(url='/login', status_code=303)
-
-
-@app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-
-@app.post('/register')
-async def register(
-        request: Request,
-        username: str = Form(...),
-        password: str = Form(...),
-        email: str = Form(...),
-        db: Session = Depends(get_db)
-):
-    if not username or not password or not email:
-        return JSONResponse(status_code=400, content={'error': '所有字段都是必填的！'})
-
-    existing_user = db.query(models.User).filter(models.User.username == username).first()
-    if existing_user:
-        return JSONResponse(status_code=400, content={'error': '用户名已存在！'})
-
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    new_user = models.User(username=username, password=hashed_password.decode('utf-8'), email=email)
-    db.add(new_user)
-    db.commit()
-
-    return JSONResponse(content={'redirect': '/login/', 'message': '注册成功！'})
-
-
-def load_user(username: str, db: Session):
-    return db.query(models.User).filter(models.User.username == username).first()
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-
 @app.get("/kg", response_class=HTMLResponse)
 async def kg_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
     user_info = load_user(user, db) if user else None
@@ -115,6 +53,14 @@ async def kgqa_page(request: Request, db: Session = Depends(get_db), user: str =
     return templates.TemplateResponse("kgqa.html", {"request": request, "nav_class": "kgqa", "user": user_info})
 
 
+# 示例回答字典
+responses = {
+    "核桃是什么": "核桃是一种坚果，富含营养，对人体健康有益。",
+    "核桃有哪些病虫害": "核桃常见的病虫害包括核桃炭疽病、核桃黑斑病、核桃象鼻虫等。",
+    "核桃适合在什么环境种植": "核桃适合在温暖湿润的气候条件下种植，土壤要求排水良好，富含有机质。"
+}
+
+
 def chat_bot(message, history):
     history = [[y, x] for x, y in history]
     data = {
@@ -122,15 +68,19 @@ def chat_bot(message, history):
         'history': history
     }
     data = json.dumps(data)
-    return "Response from chatbot"
+
+    # 查找回答
+    response = responses.get(message, "抱歉，我不太明白您的问题。")
+    return response
 
 
 def start_chatbot():
     gr.ChatInterface(
         fn=chat_bot,
-        chatbot=gr.Chatbot(height=500, value=[["你好", "您好，我是核桃助手，我将尽力帮助您解决问题。"]]),
+        chatbot=gr.Chatbot(height=500, value=[["你好", "您好，我是核桃小助手，我将尽力帮助您解决问题。"]]),
         theme="soft",
-        examples=["核桃是什么", "核桃2", "核桃3"],
+        title="核桃小助手",
+        examples=["核桃是什么", "核桃有哪些病虫害", "核桃适合在什么环境种植?"],
         retry_btn=None,
         submit_btn="发送",
         undo_btn="删除前言",
@@ -164,9 +114,9 @@ if __name__ == "__main__":
         gradio_process.join()
         fastapi_process.join()
     except KeyboardInterrupt:
-        print("Keyboard interruption in main thread... closing servers.")
+        print("正在退出...")
         gradio_process.terminate()
         fastapi_process.terminate()
         gradio_process.join()
         fastapi_process.join()
-        print("Servers shut down successfully.")
+        print("退出成功。")

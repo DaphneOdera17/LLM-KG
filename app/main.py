@@ -160,5 +160,13 @@ if __name__ == "__main__":
     fastapi_process = multiprocessing.Process(target=run_fastapi)
     fastapi_process.start()
 
-    gradio_process.join()
-    fastapi_process.join()
+    try:
+        gradio_process.join()
+        fastapi_process.join()
+    except KeyboardInterrupt:
+        print("Keyboard interruption in main thread... closing servers.")
+        gradio_process.terminate()
+        fastapi_process.terminate()
+        gradio_process.join()
+        fastapi_process.join()
+        print("Servers shut down successfully.")

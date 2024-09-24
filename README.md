@@ -9,6 +9,8 @@
 ```shell
 pip install -r requirements.txt
 pip install pymysql
+pip install httpx_sse
+pip install pyjwt
 ```
 
 ## 项目配置

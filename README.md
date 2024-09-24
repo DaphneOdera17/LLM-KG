@@ -23,6 +23,11 @@ LANGCHAIN_API_KEY=
 ZHIPUAI_API_KEY=
 ```
 
+## 项目详情
+登录注册逻辑位于 app/auth.py
+
+问答界面逻辑位于 app/chatbot.py
+
 ## 项目启动
 
 ### 方式一

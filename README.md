@@ -11,6 +11,18 @@ pip install -r requirements.txt
 pip install pymysql
 ```
 
+## 项目配置
+根目录下创建 .env
+
+里面配置 api 等:
+
+智谱 ai
+```
+LANGCHAIN_TRACING_V2=
+LANGCHAIN_API_KEY=
+ZHIPUAI_API_KEY=
+```
+
 ## 项目启动
 
 ### 方式一

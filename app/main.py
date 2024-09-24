@@ -1,17 +1,25 @@
-import json
 import multiprocessing
+import os
+import logging
 import uvicorn
-from fastapi import FastAPI, Depends, Request, Response, Form, Cookie
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import FastAPI, Depends, Request, Cookie
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
-import bcrypt
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-import gradio as gr
 from app import models
 from app.db import SessionLocal, engine, Base
 from auth import router as auth_router
+from chatbot import start_chatbot
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
+# 日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -27,10 +35,8 @@ def get_db():
     finally:
         db.close()
 
-
 def load_user(username: str, db: Session):
     return db.query(models.User).filter(models.User.username == username).first()
-
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
@@ -40,53 +46,15 @@ async def root(request: Request, db: Session = Depends(get_db), user: str = Cook
     user_info = load_user(user, db)
     return templates.TemplateResponse("index.html", {"request": request, "nav_class": "home", "user": user_info})
 
-
 @app.get("/kg", response_class=HTMLResponse)
 async def kg_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
     user_info = load_user(user, db) if user else None
     return templates.TemplateResponse("kg.html", {"request": request, "nav_class": "kg", "user": user_info})
 
-
 @app.get("/kgqa", response_class=HTMLResponse)
 async def kgqa_page(request: Request, db: Session = Depends(get_db), user: str = Cookie(None)):
     user_info = load_user(user, db) if user else None
     return templates.TemplateResponse("kgqa.html", {"request": request, "nav_class": "kgqa", "user": user_info})
-
-
-# 示例回答字典
-responses = {
-    "核桃是什么": "核桃是一种坚果，富含营养，对人体健康有益。",
-    "核桃有哪些病虫害": "核桃常见的病虫害包括核桃炭疽病、核桃黑斑病、核桃象鼻虫等。",
-    "核桃适合在什么环境种植": "核桃适合在温暖湿润的气候条件下种植，土壤要求排水良好，富含有机质。"
-}
-
-
-def chat_bot(message, history):
-    history = [[y, x] for x, y in history]
-    data = {
-        'query': message,
-        'history': history
-    }
-    data = json.dumps(data)
-
-    # 查找回答
-    response = responses.get(message, "抱歉，我不太明白您的问题。")
-    return response
-
-
-def start_chatbot():
-    gr.ChatInterface(
-        fn=chat_bot,
-        chatbot=gr.Chatbot(height=500, value=[["你好", "您好，我是核桃小助手，我将尽力帮助您解决问题。"]]),
-        theme="soft",
-        title="核桃小助手",
-        examples=["核桃是什么", "核桃有哪些病虫害", "核桃适合在什么环境种植?"],
-        retry_btn=None,
-        submit_btn="发送",
-        undo_btn="删除前言",
-        clear_btn="清空",
-    ).queue().launch(server_name="127.0.0.1", server_port=7860, share=True, inbrowser=False)
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -96,10 +64,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 def run_fastapi():
     uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
-
 
 if __name__ == "__main__":
     # 启动 gradio

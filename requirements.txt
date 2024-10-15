@@ -10,3 +10,4 @@ python-dotenv~=1.0.1
 pymysql
 httpx_sse
 pyjwt
+neo4j~=5.25.0

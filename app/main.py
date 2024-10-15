@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import logging
+from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Depends, Request, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +14,7 @@ from app.db import SessionLocal, engine, Base
 from auth import router as auth_router
 from chatbot import start_chatbot
 from dotenv import load_dotenv
+from app.neo4j_db import Neo4jConnection
 
 # 加载环境变量
 load_dotenv()
@@ -22,11 +24,29 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
-app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global neo4j_db
+    neo4j_uri = os.getenv("NEO4J_URI")
+    neo4j_user = os.getenv("NEO4J_USER")
+    neo4j_password = os.getenv("NEO4J_PASSWORD")
+
+    neo4j_db = Neo4jConnection(uri=neo4j_uri, user=neo4j_user, password=neo4j_password)
+    logger.info("Neo4j 连接已建立")
+
+    yield
+
+    if neo4j_db is not None:
+        neo4j_db.close()
+        logger.info("Neo4j 连接已关闭")
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 app.include_router(auth_router)
+neo4j_db = None
 
 def get_db():
     db = SessionLocal()
